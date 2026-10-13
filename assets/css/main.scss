@@ -4,6 +4,7 @@
 
 @charset "utf-8";
 $link-color: DarkBlue;
+$max-width: 100%; // let the page use the full browser width (theme default: $x-large = 1280px)
 
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
