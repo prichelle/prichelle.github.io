@@ -18,6 +18,10 @@
   {%- endcase -%}
 {% endif %}
 
+{% if page.layout == "single" %}
+  <script type="module" src="{{ '/assets/js/mermaid-init.js' | relative_url }}"></script>
+{% endif %}
+
 {% include analytics.html %}
 {% include /comments-providers/scripts.html %}
 
