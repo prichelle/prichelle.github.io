@@ -1,0 +1,66 @@
+kind: DataPowerAssembly
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-assembly
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+  labels:
+    gatewayTypes:
+      - datapower
+spec:
+  x-ibm-configuration:
+    type: rest
+    phase: realized
+    enforced: true
+    testable: true
+    gateway: datapower-api-gateway
+    cors:
+      enabled: true
+    assembly:
+      execute:
+        - operation-switch:
+            version: 2.0.0
+            title: Route by operation
+            case:
+              - operations:
+                  - verb: get
+                    path: /accounts
+                execute:
+                  - gatewayscript:
+                      version: 2.0.0
+                      title: Return accounts and token details
+                      source: |-
+                        // oauth.verified_access_token.* is populated by the gateway
+                        // after the bearer token has been validated by the native OAuth provider
+                        var rsp = {
+                          accounts: [
+                            { id: 'ACC-1001', owner: 'alice', balance: 1250.5 },
+                            { id: 'ACC-1002', owner: 'bob', balance: 80.0 }
+                          ],
+                          caller: {
+                            client_id: context.get('oauth.verified_access_token.client_id'),
+                            scope: context.get('oauth.verified_access_token.scope')
+                          }
+                        };
+                        context.set('message.headers.content-type', 'application/json');
+                        context.set('message.status.code', 200);
+                        context.message.body.write(JSON.stringify(rsp));
+              - operations:
+                  - verb: post
+                    path: /accounts
+                execute:
+                  - set-variable:
+                      version: 2.0.0
+                      title: Return created account
+                      actions:
+                        - set: message.headers.content-type
+                          value: application/json
+                          type: string
+                        - set: message.status.code
+                          value: 201
+                          type: number
+                        - set: message.body
+                          value: '{"id":"ACC-1003","owner":"new-owner","balance":0}'
+                          type: string

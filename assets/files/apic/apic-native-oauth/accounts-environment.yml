@@ -1,0 +1,13 @@
+kind: environment
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-environment
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+spec:
+  variables:
+    - key: access_token
+      isSecret: true
+      value: $(access_token)

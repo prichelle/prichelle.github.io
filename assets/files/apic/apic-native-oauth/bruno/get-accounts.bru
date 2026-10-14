@@ -1,0 +1,15 @@
+meta {
+  name: GET /accounts (with token)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{gateway_url}}/accounts/accounts
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

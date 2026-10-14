@@ -1,0 +1,21 @@
+kind: assertion
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-get-200
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+spec:
+  - name: Status code is 200
+    key: code
+    action: equals
+    value: 200
+  - name: Response is JSON
+    key: header().Content-Type
+    action: include
+    value: application/json
+  - name: Response contains the token details seen by the gateway
+    key: json()
+    action: haveProperty
+    value: caller

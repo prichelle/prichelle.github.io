@@ -1,0 +1,21 @@
+meta {
+  name: Introspect token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{gateway_url}}/{{provider_path}}/oauth2/introspect
+  body: form-urlencoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{client_id}}
+  password: {{client_secret}}
+}
+
+body:form-urlencoded {
+  token: {{access_token}}
+  token_type_hint: access_token
+}

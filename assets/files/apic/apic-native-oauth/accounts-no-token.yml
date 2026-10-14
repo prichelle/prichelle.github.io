@@ -1,0 +1,13 @@
+kind: assertion
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-no-token
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+spec:
+  - name: Call without access token is rejected
+    key: code
+    action: equals
+    value: 401

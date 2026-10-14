@@ -1,0 +1,13 @@
+kind: Plan
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-plan
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+  description: Default plan, unlimited calls
+spec:
+  qos:
+    withQuota:
+      unlimited: {}

@@ -1,0 +1,15 @@
+kind: API
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-api
+  version: '1.0'
+  namespace: apic-native-oauth
+  tags:
+    - oauth
+    - accounts
+  type: REST
+spec:
+  api-spec:
+    $path: ./accounts-spec.yml
+  policy-sequence:
+    - $ref: apic-native-oauth:accounts-assembly:1.0

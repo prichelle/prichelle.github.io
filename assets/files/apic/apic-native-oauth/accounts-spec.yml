@@ -1,0 +1,111 @@
+openapi: 3.0.4
+info:
+  title: Accounts API
+  version: '1.0'
+  contact:
+    name: API team
+    email: api-team@example.com
+  description: >-
+    Sample API protected by the API Connect native OAuth provider using the
+    OAuth 2.0 client credentials grant (Application flow). Read access requires
+    the accounts:read scope, write access requires the accounts:write scope.
+servers:
+  - url: /accounts
+tags:
+  - name: accounts
+    description: Account management operations
+paths:
+  /accounts:
+    get:
+      operationId: listAccounts
+      tags:
+        - accounts
+      summary: List accounts
+      description: Requires the scope accounts:read.
+      security:
+        - nativeOAuth:
+            - accounts:read
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountList'
+        '401':
+          description: Missing, invalid or expired access token
+        '403':
+          description: Token does not carry the required scope
+    post:
+      operationId: createAccount
+      tags:
+        - accounts
+      summary: Create an account
+      description: Requires the scope accounts:write.
+      security:
+        - nativeOAuth:
+            - accounts:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewAccount'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          description: Missing, invalid or expired access token
+        '403':
+          description: Token does not carry the required scope
+components:
+  securitySchemes:
+    nativeOAuth:
+      type: oauth2
+      description: Native OAuth provider, client credentials (Application) flow
+      x-ibm-oauth-provider: native-oauth
+      flows:
+        clientCredentials:
+          tokenUrl: https://$(catalog.url)/native-oauth/oauth2/token
+          scopes:
+            accounts:read: Read access to accounts
+            accounts:write: Create and update accounts
+  schemas:
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+        owner:
+          type: string
+        balance:
+          type: number
+    NewAccount:
+      type: object
+      required:
+        - owner
+      properties:
+        owner:
+          type: string
+    AccountList:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        caller:
+          type: object
+          description: Token details seen by the gateway (demo only)
+          properties:
+            client_id:
+              type: string
+            scope:
+              type: string
+security:
+  - nativeOAuth:
+      - accounts:read

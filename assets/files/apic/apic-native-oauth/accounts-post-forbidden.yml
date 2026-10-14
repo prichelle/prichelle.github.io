@@ -1,0 +1,13 @@
+kind: assertion
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-post-forbidden
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+spec:
+  - name: Token without accounts:write scope is rejected (4xx)
+    key: code
+    action: greaterThan
+    value: 399

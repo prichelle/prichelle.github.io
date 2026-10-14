@@ -133,7 +133,7 @@ The OAuth provider is a reusable resource in API Manager.
 5. Click **Next / Save**.
 
 The Native OAuth provider is created:  
-<img src="/assets/images/2026-10-13-APIC-Native-OAuth/native-oauth-cfg.png" width="50%" >
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/native-oauth-cfg.png" width="50%" >
 
 ### Step 2 — Configure Tokens
 
@@ -229,16 +229,16 @@ paths:
 
 <mark> In order to be able to configure the OAuth security scheme using the OAuth provider configured in API Manager, your API needs to be configured with a **DataPower API Gateway** policy sequence. This is because native OAuth Provider is currently only supported with this type of gateway and the API Studio enforces it.</mark> 
 
-<img src="/assets/images/2026-10-13-APIC-Native-OAuth/api-policy-seq.png" width="50%" >
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/api-policy-seq.png" width="50%" >
 
 Steps to configure an existing API using the form:
 1. Select your API and click on **Components** in the Outline view  
 2. Scroll down and select "add security scheme"  
-<img src="/assets/images/2026-10-13-APIC-Native-OAuth/components-sec.png" width="50%" >
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/components-sec.png" width="50%" >
 3. Provide a name for the security scheme key (here in the image **native-oauth**) and select **oauth2**. click add  
-<img src="/assets/images/2026-10-13-APIC-Native-OAuth/add-sec-scheme.png" width="50%" >
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/add-sec-scheme.png" width="50%" >
 4. Select the right OAuth provider by connecting to the APIM configuration: api connect manager url, organisation and sandbox where the Native OAuth provider is configured <mark> you need to be connected to an APIC manager if you are using API Studio </mark>.  
-<img src="/assets/images/2026-10-13-APIC-Native-OAuth/oauth-apim-connection.png" width="50%" >
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/oauth-apim-connection.png" width="50%" >
 
 The configuration from the OAuth provider is loaded.
 

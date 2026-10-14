@@ -1,0 +1,29 @@
+kind: Product
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-product
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+  description: Accounts API protected by the native OAuth provider
+spec:
+  apis:
+    - $ref: apic-native-oauth:accounts-api:1.0
+  plans:
+    - $ref: apic-native-oauth:accounts-plan:1.0
+  extensions:
+    portal-config:
+      apiVersion: api.ibm.com/v1
+      spec:
+        visibility:
+          view:
+            type: authenticated
+            orgs: []
+            enabled: true
+            tags: []
+          subscribe:
+            type: authenticated
+            orgs: []
+            enabled: true
+            tags: []

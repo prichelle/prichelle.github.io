@@ -1,0 +1,46 @@
+kind: test
+apiVersion: api.ibm.com/v1
+metadata:
+  name: accounts-test
+  namespace: apic-native-oauth
+  version: '1.0'
+  tags:
+    - oauth
+spec:
+  api:
+    $ref: apic-native-oauth:accounts-api:1.0
+  environment:
+    $ref: apic-native-oauth:accounts-environment:1.0
+  request:
+    - method: GET
+      resource: /accounts
+      headers:
+        - key: accept
+          value: application/json
+      auth:
+        bearerToken: ${access_token}
+      assertions:
+        $ref: apic-native-oauth:accounts-get-200:1.0
+    - method: GET
+      resource: /accounts
+      headers:
+        - key: accept
+          value: application/json
+      auth:
+        noauth: true
+      assertions:
+        $ref: apic-native-oauth:accounts-no-token:1.0
+    - method: POST
+      resource: /accounts
+      headers:
+        - key: accept
+          value: application/json
+        - key: content-type
+          value: application/json
+      auth:
+        bearerToken: ${access_token}
+      payload:
+        raw:
+          json: '{"owner":"alice"}'
+      assertions:
+        $ref: apic-native-oauth:accounts-post-forbidden:1.0
