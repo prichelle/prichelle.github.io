@@ -157,13 +157,15 @@ The Native OAuth provider is created:
 
 ### Step 4 — Attach the Provider to a Catalog
 
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/oauth-prov-catalog.png" width="50%" > 
+
+
 1. Navigate to the **Catalog** where the API will be published.
 2. Go to **Catalog Settings → OAuth providers**.
 3. Add `native-oauth` to the catalog.
 
-> Without this configuration you will not be able to deploy the API secured with OAuth.
+> Without this configuration you will not be able to deploy the API secured with OAuth
 
-<img src="../assets/images/2026-10-13-APIC-Native-OAuth/oauth-prov-catalog.png" width="50%" > 
 
 ---
 
