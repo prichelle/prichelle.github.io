@@ -163,7 +163,7 @@ The Native OAuth provider is created:
 
 > Without this configuration you will not be able to deploy the API secured with OAuth.
 
-<img src="/assets/images/2026-10-13-APIC-Native-OAuth/oauth-prov-catalog.png" width="50%" > 
+<img src="../assets/images/2026-10-13-APIC-Native-OAuth/oauth-prov-catalog.png" width="50%" > 
 
 ---
 
