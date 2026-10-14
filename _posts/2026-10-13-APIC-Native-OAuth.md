@@ -157,7 +157,7 @@ The Native OAuth provider is created:
 
 ### Step 4 — Attach the Provider to a Catalog
 
-<img src="../assets/images/2026-10-13-APIC-Native-OAuth/oauth-prov-catalog.png" width="50%" > 
+<img src="/assets/images/2026-10-13-APIC-Native-OAuth/oauth-prov-catalog.png" width="50%" > 
 
 
 1. Navigate to the **Catalog** where the API will be published.
