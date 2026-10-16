@@ -1,0 +1,12 @@
+kind: Properties
+apiVersion: api.ibm.com/v1
+metadata:
+  name: properties-oauth-token-introspection
+  namespace: TPP
+  version: 1.0.0
+  tags: []
+spec:
+  jwks-url:
+    value: https://dev-qcqhr0repsv7nxpg.eu.auth0.com/.well-known/jwks.json
+    description: JWKS endpoint for the signature
+    encoded: false

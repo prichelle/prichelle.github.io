@@ -1,0 +1,26 @@
+kind: DataPowerAssembly
+apiVersion: api.ibm.com/v1
+metadata:
+  name: polseq-demo-dp
+  namespace: DemoEchoApp
+  version: '1.0'
+  tags: []
+  labels:
+    gatewayTypes:
+      - datapower
+spec:
+  x-ibm-configuration:
+    gateway: datapower-api-gateway
+    assembly:
+      execute:
+        - gatewayscript:
+            version: 2.0.0
+            title: gatewayscript
+            source: |2-
+                              var response = { "status": "ok" };
+                              context.set('message.body', response);
+    phase: realized
+    enforced: true
+    testable: true
+    cors:
+      enabled: true

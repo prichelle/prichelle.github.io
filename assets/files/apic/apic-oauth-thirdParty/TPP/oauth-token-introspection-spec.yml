@@ -1,0 +1,41 @@
+swagger: '2.0'
+info:
+  title: OAuthTokenIntrospection
+  x-ibm-name: oauth-token-introspection
+  version: 1.0.0
+schemes:
+  - https
+basePath: /oauth
+produces:
+  - application/json
+consumes:
+  - application/x-www-form-urlencoded
+x-ibm-configuration:
+  security: []
+  securityDefinitions: {}
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  application-authentication:
+    certificate: false
+  activity-log:
+    success-content: payload
+    error-content: activity
+    enabled: true
+  buffering: true
+paths:
+  /introspect:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters: []
+      consumes: []
+      produces: []
+      security: []

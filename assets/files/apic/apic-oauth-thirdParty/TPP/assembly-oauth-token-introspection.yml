@@ -1,0 +1,121 @@
+kind: DataPowerAssembly
+apiVersion: api.ibm.com/v1
+metadata:
+  name: assembly-oauth-token-introspection
+  namespace: TPP
+  version: 1.0.0
+  tags: []
+spec:
+  x-ibm-configuration:
+    security: []
+    securityDefinitions: {}
+    cors:
+      enabled: true
+    gateway: datapower-api-gateway
+    type: rest
+    phase: realized
+    enforced: true
+    testable: true
+    properties:
+      jwks-url:
+        value: https://dev-qcqhr0repsv7nxpg.eu.auth0.com/.well-known/jwks.json
+        description: JWKS endpoint for the signature
+        encoded: false
+    assembly:
+      execute:
+        - gatewayscript:
+            version: 2.0.0
+            title: extract-token
+            source: |
+              context.request.body.readAsBuffer(function(error, buffer) {
+                if (error) {
+                  context.message.statusCode = '500';
+                }
+                if(buffer) {
+                  var response = {"active" : true};
+
+                  var bodyStr = buffer.toString();
+                  var bodyParsed = bodyStr.split('&');
+
+                  for (var i = 0; i < bodyParsed.length; i++) {
+                      var pair = bodyParsed[i].split('=');
+                      console.debug('pair: ' + pair[0]);
+                      if (pair[0]==='token'){
+                          response['reqat'] = pair[1];
+                          context.set('reqat',pair[1]);
+                          console.debug('token: ' + pair[1]);
+                      }
+                   }
+                }
+                else{
+                    context.message.statusCode = '500';
+                    }
+              });
+        - invoke:
+            title: invoke
+            timeout: 60
+            verb: GET
+            cache-response: protocol
+            cache-ttl: 900
+            version: 2.0.0
+            target-url: $(api.properties.jwks-url)
+            output: rsa256-key
+            header-control:
+              type: blacklist
+              values: []
+            parameter-control:
+              type: blacklist
+              values: []
+            tls-profile: tls-client-profile-catalog-default:1.0.0
+            backend-type: json
+        - gatewayscript:
+            title: gatewayscript
+            version: 2.0.0
+            source: |-
+              var rsa256Key = JSON.parse(context.get('rsa256-key.body'));
+              console.error('rsa keys %s', rsa256Key.keys[0]);
+              context.set('jwk-key', rsa256Key.keys[0]);
+        - jwt-validate:
+            version: 2.0.0
+            title: at-jwt-validate
+            jwt: reqat
+            output-claims: decoded.claims
+            jws-jwk: jwk-key
+            description: validate the provided JWT token
+        - gatewayscript:
+            title: gatewayscript
+            version: 2.0.0
+            source: |
+              if (context.get('decoded.claims')) {
+                var response = { "active": true };
+                
+                var decClaims = context.get('decoded.claims');
+                response.scope = decClaims.scope; //claims scp contains the scopes
+                
+                context.set('message.body', response);
+                
+                context.message.header.set('content-type','application/json');
+                context.message.header.remove('authorization');
+
+                context.set('message.status.code', 200);
+
+                console.debug ('>> oauth introspection is successful %s');
+              } else {
+                var response = { "active": false }; //no scope are available
+                context.set('message.body', response);
+                
+                context.message.header.set('Content-Type','application/json; charset=utf-8');
+                context.message.header.remove('authorization');
+                
+                context.set('message.status.code', 200);
+
+                console.debug ('>> oauth introspection failed due to missing scope ');
+              }
+      catch: []
+    application-authentication:
+      certificate: false
+    activity-log:
+      success-content: payload
+      error-content: activity
+      enabled: true
+    buffering: true

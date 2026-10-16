@@ -1,0 +1,17 @@
+kind: API
+apiVersion: api.ibm.com/v1
+metadata:
+  name: oauth-token-introspection
+  version: 1.0.0
+  namespace: TPP
+  tags: []
+  type: REST
+spec:
+  api-spec:
+    $path: ./oauth-token-introspection-spec.yml
+  policy-sequence:
+    - $ref: TPP:assembly-oauth-token-introspection:1.0.0
+  cors:
+    $ref: TPP:cors-oauth-token-introspection:1.0.0
+  properties:
+    $ref: TPP:properties-oauth-token-introspection:1.0.0

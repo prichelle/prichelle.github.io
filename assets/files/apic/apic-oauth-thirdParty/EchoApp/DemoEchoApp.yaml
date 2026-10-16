@@ -1,0 +1,13 @@
+kind: API
+apiVersion: api.ibm.com/v1
+metadata:
+  name: DemoEchoApp
+  version: '1.0'
+  namespace: DemoEchoApp
+  tags: []
+  type: REST
+spec:
+  api-spec:
+    $path: ./demoechoapp-spec.yml
+  policy-sequence:
+    - $ref: DemoEchoApp:polseq-demo-dp:1.0

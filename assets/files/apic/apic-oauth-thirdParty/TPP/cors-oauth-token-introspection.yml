@@ -1,0 +1,17 @@
+kind: CORS
+apiVersion: api.ibm.com/v1
+metadata:
+  name: cors-oauth-token-introspection
+  namespace: TPP
+  version: 1.0.0
+  tags: []
+spec:
+  rules:
+    - action: allow
+      originList:
+        - '*'
+      allowCredentials: false
+      exposeHeaders:
+        predefined: false
+        custom: ''
+        backend: false

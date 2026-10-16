@@ -1,0 +1,52 @@
+{
+  "type": "oauth_provider",
+  "api_version": "2.0.0",
+  "id": "60395dca-e764-462f-8279-d85cf22d00ed",
+  "name": "tpp_auth0_dp",
+  "title": "TPP_Auth0_DP",
+  "debug": false,
+  "owned": true,
+  "provider_type": "third_party",
+  "scopes": {
+    "accounts:read": "Sample scope description 1",
+    "accounts:write": ""
+  },
+  "grants": [
+    "access_code",
+    "application"
+  ],
+  "gateway_version": "6000",
+  "third_party_config": {
+    "token_validation_requirement": "active",
+    "introspection_endpoint": {
+      "endpoint": "https://d-dev7963962.a-fra-s2.apiconnect.ipaas.ibmappdomain.cloud/dev7963962/sandbox/oauth/introspect",
+      "tls_client_profile_url": "https://platform-api.eu-central-b.apiconnect.automation.ibm.com/api/orgs/c931e57b-d6a3-43ff-ab9b-14fa7e75dccd/tls-client-profiles/14797a62-49bb-4330-b7a0-aaa7198c61e6"
+    },
+    "authorize_endpoint": "https://dev-qcqhr0repsv7nxpg.eu.auth0.com/oauth/authorize",
+    "token_endpoint": "https://dev-qcqhr0repsv7nxpg.eu.auth0.com/oauth/token",
+    "security": [],
+    "basic_auth": {
+      "request_headername": "x-introspect-basic-authorization-header"
+    },
+    "auth_header_pass_thru": false,
+    "introspect_cache_type": "no-cache",
+    "advanced_scope_security": {
+      "enabled": false,
+      "mode": [
+        "basic-auth"
+      ],
+      "basic_auth": {
+        "request_headername": "x-advanced-scope-basic-authorization-header"
+      }
+    }
+  },
+  "user_registry_urls": [],
+  "jwt_provider_urls": [],
+  "tls_client_profile_urls": [
+    "https://platform-api.eu-central-b.apiconnect.automation.ibm.com/api/orgs/c931e57b-d6a3-43ff-ab9b-14fa7e75dccd/tls-client-profiles/14797a62-49bb-4330-b7a0-aaa7198c61e6"
+  ],
+  "created_at": "2026-10-15T13:11:54.000Z",
+  "updated_at": "2026-10-15T14:51:42.770Z",
+  "org_url": "https://platform-api.eu-central-b.apiconnect.automation.ibm.com/api/orgs/c931e57b-d6a3-43ff-ab9b-14fa7e75dccd",
+  "url": "https://platform-api.eu-central-b.apiconnect.automation.ibm.com/api/orgs/c931e57b-d6a3-43ff-ab9b-14fa7e75dccd/oauth-providers/60395dca-e764-462f-8279-d85cf22d00ed"
+}
