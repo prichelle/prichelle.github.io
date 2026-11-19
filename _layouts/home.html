@@ -4,17 +4,6 @@ layout: archive
 
 {{ content }}
 
-{% if site.tags.size > 0 %}
-<div class="blog-tags">
-  Tags:
-  {% for tag in site.tags %}
-  <a href="{{ '/tags' | relative_url }}#{{- tag[0] -}}">{{- tag[0] -}}</a>
-  {% endfor %}
-</div>
-{% endif %}
-
-
-
 <h3 class="archive__subtitle">{{ site.data.ui-text[site.locale].recent_posts | default: "Recent Posts" }}</h3>
 
 {% if paginator %}

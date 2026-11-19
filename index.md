@@ -13,6 +13,15 @@ header:
 I have created this place to provide information on IBM Integration Software.  
 If you are looking to get some information on a specific software or if you would like to have a topic addressed here, do not hesitate to contact me.
 
+{% if site.tags.size > 0 %}
+<div class="blog-tags">
+  Tags:
+  {% for tag in site.tags %}
+  <a href="{{ '/tags' | relative_url }}#{{- tag[0] -}}">{{- tag[0] -}}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
 Software covered:
 - [CP4I](https://www.ibm.com/be-en/cloud/cloud-pak-for-integration) - IBM Cloud Pak for Integration
 - [ACE](https://www.ibm.com/be-en/cloud/app-connect) - AppConnect Enterprise - IBM application integration solution
