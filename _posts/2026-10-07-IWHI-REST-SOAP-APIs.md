@@ -62,18 +62,18 @@ Suppose we have a simple Flow Service called `FlowsServiceEcho` (or `flowEcho`) 
 
 ### Exposing as a REST API
 1. In the webMethods Integration navigation, open your Project and navigate to **APIs** &rarr; **REST APIs**.
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/nav-rest-api.png" width="50%" >. 
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/nav-rest-api.png" width="50%" >. 
 2. Click **Create REST API**.  
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/Create-API.png" width="50%" >.  
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/Create-API.png" width="50%" >.  
 Select cloud or deploy anywhere based on the Wm FlowService type that you have created and want to expose.  
 Select "create from scratch".  
 3. provide a name, and for the access network choose **public**.   
 4. On the **Resources and Methods** click on **add resource**.  
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/add-resource-api-rest.png" width="50%" >. 
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/add-resource-api-rest.png" width="50%" >. 
 5. Provide a **path** and select the operation to expose.  
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/rest-api-path.png" width="50%" >. 
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/rest-api-path.png" width="50%" >. 
 6. Choose your **flow service** and **done**.  
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/rest-api-flow-service.png" width="50%" >.  
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/rest-api-flow-service.png" width="50%" >.  
 7. **save**
 
 ### Exposing as a SOAP API (Provider WSD)
@@ -85,7 +85,7 @@ Select "create from scratch".
 - For the access network choose **public**.  
 - Select the flow service that you would like to expose
 - Document/Literal.   
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/soap-api-config.png" width="50%" >. 
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/soap-api-config.png" width="50%" >. 
 
 
 ---
@@ -134,10 +134,10 @@ Understanding the security separation between REST and SOAP in IWHI SaaS is crit
 
 ### A. Configuring OAuth 2.0 for REST APIs
 1. In webMethods Integration, navigate to **Settings** &rarr; **OAuth 2.0** &rarr; **Scope Management** &rarr; 
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/oauth-scopemgmt.png" width="50%" >
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/oauth-scopemgmt.png" width="50%" >
 2. Click **Add new Scope**, provide a name (e.g. `postEchoFs`):
    - Select your REST API resource path: `/integration/restv2/development/fl6dc44d25a8/FlowsServiceEcho/`.   
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/addNewScope.png" width="50%" >.  
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/addNewScope.png" width="50%" >.  
 
 3. Under **Applications**, register a client application  
 - A version 
@@ -145,12 +145,12 @@ Understanding the security separation between REST and SOAP in IWHI SaaS is crit
 - redirect url: for example: **https://example.com***. 
 - grants: client credential grants.  
 - set the appropriate expiration.   
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/newAddClient.png" width="50%" >.  
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/newAddClient.png" width="50%" >.  
 
 4. In the client registration list, identify the one that you created and select to add a new scope.   
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/link-app-scope.png" width="50%" >. 
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/link-app-scope.png" width="50%" >. 
 5. Select **associate new scope** and select the scope that you created previously.  
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/scope-associated.png" width="50%" >.  
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/scope-associated.png" width="50%" >.  
 7. To get the client Id and Secret, edit your client registration.   
 6. Request an OAuth token using the Client Credentials grant:
    ```bash
@@ -165,7 +165,7 @@ Understanding the security separation between REST and SOAP in IWHI SaaS is crit
 Because the native SOAP runtime (`/integration/ws/v2/...`) does not participate in the REST OAuth scope mapping UI, you need to get an API Keys.  
 This API Keys can be created as follows (Note that you need proper rights to be able to access it).
 1. accessing the **manage environments** &rarr; **IBM SaaS Console**.    
-<img src="../assets/images/2026-10-07-IWHI-REST-SOAP-APIs/IBM-SaaS-Console.png" width="50%" >.  
+<img src="/assets/images/2026-10-07-IWHI-REST-SOAP-APIs/IBM-SaaS-Console.png" width="50%" >.  
 2. Navigate to **Access Management** &rarr; **API Keys** (or **Instance Keys**).
 3. Generate an **Key**.
 3. Copy the resulting key string (e.g. `azI6ZWMzNDdiNTct...`).
