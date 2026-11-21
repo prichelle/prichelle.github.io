@@ -52,22 +52,26 @@ In **IBM API Connect**, defining `consent:*` applies to both **Third-Party** and
 When securing an API in OpenAPI (Swagger), you define how required scopes must be matched against the scopes in the validated token:
 
 - **Logical AND (all scopes required):** Specify multiple scopes within the *same* security requirement array:   
+
   ```yaml
   security:
     - oauth-provider:
         - 'account:read'
         - 'consent:*'
-  ```. 
+  ```
+  . 
   *(The token must contain both `account:read` AND `consent:*`).*
 
 - **Logical OR (any one scope required):** Specify separate security requirement objects in the `security` list:   
+
   ```yaml
   security:
     - oauth-provider:
         - 'consent'
     - oauth-provider:
         - 'consent:*'
-  ```.  
+  ```
+  .  
   *(The token is accepted if it contains either `consent` OR `consent:*`).*
 
 ### Real-World Use Cases
