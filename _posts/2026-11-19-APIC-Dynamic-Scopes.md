@@ -23,10 +23,6 @@ This post explains how dynamic scopes work in **IBM API Connect (APIC)**:
 
 > **Tested.** The native provider part was deployed and tested on an API Connect v12 DataPower API Gateway with the `client_credentials` grant. The first version of this post contained several definitions that do not work as written, they are corrected below and listed in [Section 10](#10-errata-what-changed-after-testing). The Authorization Code flow was **not** tested.
 
-> **Related Posts in this Series:**
-> - [Third-Party OAuth Provider in IBM API Connect](/assets/files/apic/apic-dynamic-scopes/APIC-OAuth-ThirdParty/) — Delegating token management to external IdPs (Auth0, Keycloak).
-> - [Native OAuth Provider in IBM API Connect](/assets/files/apic/apic-dynamic-scopes/APIC-Native-OAuth/) — APIC as Authorization Server with standard static scopes.
-
 ---
 
 ## 1. What Are Dynamic Scopes and Why Use Them?
@@ -43,7 +39,8 @@ This post explains how dynamic scopes work in **IBM API Connect (APIC)**:
 
 ### Why Use `*` (e.g. `consent:*`) in Scope Definitions?
 
-In the OAuth 2.0 specification (RFC 6749), scopes are defined as opaque, space-delimited strings; the core standard does not mandate a specific wildcard format like `*`. However, using a wildcard suffix such as `consent:*` is a recognized **industry naming convention** adopted in Open Banking frameworks (such as the **Berlin Group NextGenPSD2** and **UK Open Banking**) as well as healthcare interoperability standards like **HL7 FHIR SMART on FHIR** to visually signal that an endpoint expects a *dynamic, parameterized scope*.
+In the OAuth 2.0 specification (RFC 6749), scopes are defined as opaque, space-delimited strings; the core standard does not mandate a specific wildcard format like `*`.  
+However, using a wildcard suffix such as `consent:*` is a recognized **industry naming convention** adopted in Open Banking frameworks (such as the **Berlin Group NextGenPSD2** and **UK Open Banking**) as well as healthcare interoperability standards like **HL7 FHIR SMART on FHIR** to visually signal that an endpoint expects a *dynamic, parameterized scope*.
 
 In **IBM API Connect**, defining `consent:*` applies to both **Third-Party** and **Native** OAuth providers and serves two critical purposes:
 
@@ -54,23 +51,23 @@ In **IBM API Connect**, defining `consent:*` applies to both **Third-Party** and
 
 When securing an API in OpenAPI (Swagger), you define how required scopes must be matched against the scopes in the validated token:
 
-- **Logical AND (all scopes required):** Specify multiple scopes within the *same* security requirement array:
+- **Logical AND (all scopes required):** Specify multiple scopes within the *same* security requirement array:   
   ```yaml
   security:
     - oauth-provider:
         - 'account:read'
         - 'consent:*'
-  ```
+  ```. 
   *(The token must contain both `account:read` AND `consent:*`).*
 
-- **Logical OR (any one scope required):** Specify separate security requirement objects in the `security` list:
+- **Logical OR (any one scope required):** Specify separate security requirement objects in the `security` list:   
   ```yaml
   security:
     - oauth-provider:
         - 'consent'
     - oauth-provider:
         - 'consent:*'
-  ```
+  ```.  
   *(The token is accepted if it contains either `consent` OR `consent:*`).*
 
 ### Real-World Use Cases
@@ -147,7 +144,7 @@ Here is how the Third-Party OAuth Provider resource is configured in API Connect
 ```
 
 ### Detailed Sequence Diagram
-
+   
 ```mermaid
 sequenceDiagram
     autonumber
