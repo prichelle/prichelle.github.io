@@ -181,7 +181,7 @@ Execute the following `cURL` command passing the OAuth bearer token:
 
 ```bash
 curl -i -X POST 'https://dev62.a-fra-c1.int.ipaas.automation.ibm.com/integration/restv2/development/fl6dc44d25a8/FlowsServiceEcho/echo' \
-  -H 'Authorization: Bearer 289d0654fdb24ff6a73c38a74c6d7d2010126' \
+  -H 'Authorization: Bearer <bearer token>' \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{"Message": "Hello from REST"}'

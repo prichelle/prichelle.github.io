@@ -1,0 +1,5 @@
+type: configured_oauth_provider
+api_version: 2.0.0
+name: native-consent-oauth
+title: Native Consent OAuth Provider
+oauth_provider_url: https://api.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/api/orgs/0e7e9c2c-19cb-4be4-9594-6cb795cb8abb/oauth-providers/1df3ad5f-5eca-4ca1-b912-044aca7eca36

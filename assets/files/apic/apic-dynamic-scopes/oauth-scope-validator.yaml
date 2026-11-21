@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: OAuth Scope Validator
+  description: >
+    Internal API called by the IBM API Connect native OAuth provider
+    "Advanced scope check before token generation" (application scope check).
+    Accepts static namespace 'consent' or dynamic scopes of the form 'consent:<uuid>'.
+  version: 1.0.0
+  x-ibm-name: oauth-scope-validator
+servers:
+  - url: /oauth
+x-ibm-configuration:
+  gateway: datapower-api-gateway
+  type: rest
+  testable: true
+  enforced: true
+  phase: realized
+  cors:
+    enabled: false
+  assembly:
+    execute:
+      - gatewayscript:
+          version: 2.0.0
+          title: validate-dynamic-scope
+          source: |
+            // The native OAuth provider calls this endpoint with an HTTP GET and passes
+            // the requested scope as query parameter "token_scope" (plus app_name, app_id,
+            // org, org_id, catalog, catalog_id, trans_id, api_scope).
+            // The result is read from the response header "x-selected-scope"
+            // (mandatory on a 200, otherwise the token request fails).
+            var raw = context.get('request.parameters.token_scope.values[0]') || '';
+            var requested = decodeURIComponent(String(raw).replace(/\+/g, ' '))
+              .trim().split(/\s+/).filter(Boolean);
+
+            // static "consent", dynamic "consent:<uuid>" (RFC 4122) or the placeholder "consent:*"
+            var UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+            var dynamic = new RegExp('^consent:' + UUID + '$', 'i');
+            var valid = function (s) { return s === 'consent' || s === 'consent:*' || dynamic.test(s); };
+
+            var approved = requested.filter(valid);
+            var rejected = requested.filter(function (s) { return !valid(s); });
+
+            context.set('message.headers.content-type', 'application/json');
+            if (rejected.length > 0 || approved.length === 0) {
+              context.set('message.status.code', 403);
+              context.message.body.write(JSON.stringify({
+                error: 'invalid_scope',
+                error_description: 'Rejected unrecognised scope(s): ' + rejected.join(' ')
+              }));
+            } else {
+              // keep the placeholder next to a dynamic scope so the API requirement consent:* matches
+              if (approved.some(function (s) { return dynamic.test(s); }) &&
+                  approved.indexOf('consent:*') === -1) {
+                approved.push('consent:*');
+              }
+              var finalScope = approved.join(' ');
+              context.set('message.status.code', 200);
+              context.set('message.headers.x-selected-scope', finalScope);
+              context.message.body.write(JSON.stringify({ scope: finalScope }));
+            }
+paths:
+  /scope-check:
+    get:
+      summary: Validate OAuth dynamic scopes
+      operationId: validateScope
+      parameters:
+        - name: token_scope
+          in: query
+          required: true
+          schema:
+            type: string
+          example: 'consent:3f7a9c21-8e54-4b12-98e3-d14f7b28a9c0'
+        - {name: app_name, in: query, schema: {type: string}}
+        - {name: app_id, in: query, schema: {type: string}}
+        - {name: org, in: query, schema: {type: string}}
+        - {name: org_id, in: query, schema: {type: string}}
+        - {name: catalog, in: query, schema: {type: string}}
+        - {name: catalog_id, in: query, schema: {type: string}}
+        - {name: trans_id, in: query, schema: {type: string}}
+        - {name: api_scope, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Scope approved (also returned in the x-selected-scope header)
+          headers:
+            x-selected-scope:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scope:
+                    type: string
+        '403':
+          description: Scope rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  error_description:
+                    type: string

@@ -1,0 +1,176 @@
+openapi: 3.0.0
+info:
+  title: Echo API Protected by Dynamic OAuth Scopes
+  version: 1.0.0
+  x-ibm-name: echo-dynamic-oauth-api
+servers:
+  - url: /echo-dynamic
+x-ibm-configuration:
+  gateway: datapower-api-gateway
+  type: rest
+  testable: true
+  enforced: true
+  phase: realized
+  cors:
+    enabled: true
+  assembly:
+    execute:
+      - operation-switch:
+          version: 2.0.0
+          title: per-operation-policies
+          case:
+            # Operation 1: protected by the DYNAMIC scope consent:* (token carries consent:<uuid>)
+            - operations:
+                - verb: post
+                  path: /api/credential/echo
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: enforce-dynamic-scope
+                    source: |
+                      // Scopes of the validated opaque token, e.g. "consent:<uuid> consent:*"
+                      var tokenScope = context.get('oauth.verified_access_token.scope') || '';
+                      var re = /^consent:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+                      var consentId = null;
+                      tokenScope.trim().split(/\s+/).forEach(function (s) {
+                        var m = re.exec(s);
+                        if (m) consentId = m[1];
+                      });
+                      if (!consentId) {
+                        context.reject('Forbidden', 'Missing dynamic consent scope');
+                      } else {
+                        context.set('consent.id', consentId);
+                      }
+                - gatewayscript:
+                    version: 2.0.0
+                    title: dynamic-backend-response
+                    source: |
+                      context.request.body.readAsJSON(function (err, body) {
+                        context.set('message.status.code', 200);
+                        context.set('message.headers.content-type', 'application/json');
+                        context.message.body.write(JSON.stringify({
+                          status: 'success',
+                          message: 'Authorized with dynamic scope',
+                          consentId: context.get('consent.id'),
+                          client_id: context.get('oauth.verified_access_token.client_id'),
+                          scope: context.get('oauth.verified_access_token.scope'),
+                          echo: err ? null : body,
+                          timestamp: new Date().toISOString()
+                        }));
+                      });
+            # Operation 2: protected by the STATIC scope consent (no consent id needed)
+            - operations:
+                - verb: get
+                  path: /api/status
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: static-backend-response
+                    source: |
+                      context.set('message.status.code', 200);
+                      context.set('message.headers.content-type', 'application/json');
+                      context.message.body.write(JSON.stringify({
+                        status: 'success',
+                        message: 'Authorized with static scope consent',
+                        client_id: context.get('oauth.verified_access_token.client_id'),
+                        scope: context.get('oauth.verified_access_token.scope'),
+                        timestamp: new Date().toISOString()
+                      }));
+            # Operation 3: protected by DUAL scope (consent OR consent:*)
+            - operations:
+                - verb: delete
+                  path: /api/credential/echo
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: dual-backend-response
+                    source: |
+                      context.set('message.status.code', 200);
+                      context.set('message.headers.content-type', 'application/json');
+                      context.message.body.write(JSON.stringify({
+                        status: 'success',
+                        message: 'Authorized with dual scope (consent OR consent:*)',
+                        client_id: context.get('oauth.verified_access_token.client_id'),
+                        scope: context.get('oauth.verified_access_token.scope'),
+                        timestamp: new Date().toISOString()
+                      }));
+    catch:
+      - errors:
+          - RejectError
+        execute:
+          - gatewayscript:
+              version: 2.0.0
+              title: forbidden-body
+              source: |
+                context.set('message.status.code', 403);
+                context.set('message.headers.content-type', 'application/json');
+                context.message.body.write(JSON.stringify({
+                  httpCode: '403',
+                  httpMessage: 'Forbidden',
+                  moreInformation: 'Access requires a valid dynamic scope in the format consent:<uuid>.'
+                }));
+paths:
+  /api/status:
+    get:
+      summary: Status service requiring the static consent scope (consent)
+      operationId: status
+      security:
+        - native-consent-oauth:
+            - consent
+      responses:
+        '200':
+          description: Successful execution
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/credential/echo:
+    post:
+      summary: Echo service requiring a dynamic consent scope (consent:*)
+      operationId: echo
+      security:
+        - native-consent-oauth:
+            - 'consent:*'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Successful execution
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Scope forbidden
+    delete:
+      summary: Cleanup operation accepting either static scope (consent) OR dynamic scope (consent:*)
+      operationId: deleteEcho
+      security:
+        - native-consent-oauth:
+            - consent
+        - native-consent-oauth:
+            - 'consent:*'
+      responses:
+        '200':
+          description: Successful execution
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized
+components:
+  securitySchemes:
+    native-consent-oauth:
+      type: oauth2
+      x-ibm-oauth-provider: native-consent-oauth
+      flows:
+        clientCredentials:
+          tokenUrl: https://dpgw.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/innovative-org/sandbox/oauth-native/oauth2/token
+          scopes:
+            consent: Base namespace
+            'consent:*': Dynamic scope placeholder

@@ -1,0 +1,24 @@
+product: 1.0.0
+info:
+  name: echo-dynamic-oauth-product
+  title: Echo Dynamic OAuth Product
+  version: 1.0.0
+apis:
+  echo-dynamic-oauth-api:
+    $ref: echo-api.yaml
+gateways:
+  - datapower-api-gateway
+visibility:
+  view:
+    enabled: true
+    type: public
+  subscribe:
+    enabled: true
+    type: authenticated
+plans:
+  default:
+    title: Default Plan
+    rate-limits:
+      default:
+        value: 100/1minute
+    approval: false

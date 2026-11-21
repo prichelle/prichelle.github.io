@@ -1,0 +1,24 @@
+product: 1.0.0
+info:
+  name: scope-validator-product
+  title: OAuth Scope Validator Product
+  version: 1.0.0
+apis:
+  oauth-scope-validator:
+    $ref: oauth-scope-validator.yaml
+gateways:
+  - datapower-api-gateway
+visibility:
+  view:
+    enabled: true
+    type: public
+  subscribe:
+    enabled: true
+    type: authenticated
+plans:
+  default:
+    title: Default Plan
+    rate-limits:
+      default:
+        value: 1000/1hour
+    approval: false

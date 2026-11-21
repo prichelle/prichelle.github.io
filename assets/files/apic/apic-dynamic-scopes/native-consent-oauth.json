@@ -1,0 +1,564 @@
+{
+    "type": "oauth_provider",
+    "api_version": "2.0.0",
+    "id": "1df3ad5f-5eca-4ca1-b912-044aca7eca36",
+    "name": "native-consent-oauth",
+    "title": "native-consent-oauth",
+    "debug": false,
+    "owned": true,
+    "provider_type": "native",
+    "scopes": {
+        "empty": "test if no scope or dyn scope only provide",
+        "consent": "Base namespace for dynamic consent:<uuid> permissions",
+        "consent:*": "Placeholder for dynamic consent:<uuid> permissions"
+    },
+    "grants": [
+        "application"
+    ],
+    "gateway_version": "6000",
+    "advanced_scope": {
+        "override_endpoint_from_api": false
+    },
+    "native_provider": {
+        "clients": [
+            "confidential"
+        ],
+        "authorize_path": "/oauth2/authorize",
+        "token_path": "/oauth2/token",
+        "pkce": {
+            "enabled": false,
+            "required": false,
+            "allow_plain": false
+        },
+        "native_provider_5000": {
+            "identity_extraction": {
+                "type": "default_form"
+            },
+            "authorization": {
+                "type": "authenticated"
+            },
+            "authentication": {},
+            "scope_validators": {}
+        },
+        "advanced_scope_security": {
+            "enabled": false,
+            "mode": [
+                "basic-auth"
+            ],
+            "basic_auth": {
+                "request_headername": "x-advanced-scope-basic-authorization-header"
+            }
+        },
+        "access_code_ttl": 300,
+        "access_token_ttl": 3600,
+        "access_token_one_time_use": false,
+        "maximum_consent_ttl": 0,
+        "refresh_token": {
+            "enabled": false,
+            "count": 2048,
+            "ttl": 2682000,
+            "one_time_use": true
+        },
+        "revocation": {
+            "enabled": false,
+            "type": "native",
+            "resource_owner_revocation_path": "/oauth2/issued",
+            "client_revocation_path": "/oauth2/revoke",
+            "application_revocation": {
+                "enabled": false
+            },
+            "owner_revocation": {
+                "enabled": false
+            },
+            "third_party_fail_on_error": true
+        },
+        "token_introspection": {
+            "enabled": true,
+            "introspection_path": "/oauth2/introspect"
+        },
+        "token_metadata": {
+            "enabled": true,
+            "source": [
+                "authentication_url"
+            ],
+            "header_name_payload": "X-API-OAUTH-METADATA-FOR-PAYLOAD",
+            "header_name_token": "X-API-OAUTH-METADATA-FOR-ACCESSTOKEN"
+        },
+        "openid_connect": {
+            "enabled": false
+        },
+        "default_scopes": "empty",
+        "api": {
+            "info": {
+                "description": "",
+                "x-ibm-name": "native-consent-oauth1df3ad5f-5eca-4ca1-b912-044aca7eca36",
+                "version": "1.0.0",
+                "title": "native-consent-oauth"
+            },
+            "x-ibm-configuration": {
+                "gateway": "datapower-api-gateway",
+                "assembly": {
+                    "execute": [
+                        {
+                            "gatewayscript": {
+                                "version": "2.0.0",
+                                "title": "dynamic-scope-to-placeholder",
+                                "source": "// Runs BEFORE OAuthValidateRequest (token endpoint only).\nif (context.get('api.operation.path') === '/oauth2/token') {\n  // Define dynamic scope prefixes here (e.g., ['consent'] or ['consent', 'payment'])\n  var DYNAMIC_PREFIXES = ['consent'];\n\nconsole.error(\"**** SCOPES: \" + context.get('oauth.settings.allowed_scopes'));\n\n  var raw = context.get('request.parameters.scope.values[0]');\n  var requested = decodeURIComponent(String(raw || '').replace(/\\+/g, ' '))\n    .split(/\\s+/).filter(Boolean);\n\n  var dynamicMatches = [];\n  var processed = requested.map(function (s) {\n    for (var i = 0; i < DYNAMIC_PREFIXES.length; i++) {\n      var prefix = DYNAMIC_PREFIXES[i] + ':';\n      // Matches \"consent:1234\", \"consent:<uuid>\", but not \"consent\" or \"consent:*\"\n      if (s.indexOf(prefix) === 0 && s.length > prefix.length && s !== (prefix + '*')) {\n        dynamicMatches.push(s);\n        return prefix + '*'; // Replaces \"consent:1234\" with \"consent:*\"\n      }\n    }\n    return s;\n  });\n\n  if (dynamicMatches.length > 0) {\n    // Store original dynamic scope(s) for restoration before token generation\n    context.set('consent.requested', dynamicMatches.join(' '));\n    // Set placeholder scope(s) for OAuthValidateRequest\n    context.set('oauth.processing.scope', processed.join(' '));\n  }\n}"
+                            }
+                        },
+                        {
+                            "set-variable": {
+                                "version": "2.0.0",
+                                "title": "oauth-auto-generated-advanced-scope-set-variable",
+                                "actions": [
+                                    {
+                                        "set": "oauth.advscope.app.url",
+                                        "value": "$(ADVScopesApplicationUrl)",
+                                        "type": "any"
+                                    },
+                                    {
+                                        "set": "oauth.advscope.app.tls-profile",
+                                        "value": "$(ADVScopesApplicationTls)",
+                                        "type": "any"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "oauth": {
+                                "title": "oauth-auto-generated-1",
+                                "version": "2.0.0",
+                                "description": "This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for OAuth Validation by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.",
+                                "oauth-provider-settings-ref": {
+                                    "default": "native-consent-oauth"
+                                },
+                                "supported-oauth-components": [
+                                    "OAuthValidateRequest"
+                                ]
+                            }
+                        },
+                        {
+                            "switch": {
+                                "version": "2.0.0",
+                                "title": "oauth-auto-generated-switch",
+                                "case": [
+                                    {
+                                        "condition": "($operationPath() = '/oauth2/token')",
+                                        "execute": [
+                                            {
+                                                "gatewayscript": {
+                                                    "version": "2.0.0",
+                                                    "title": "restore-dynamic-scope",
+                                                    "source": "// Runs right BEFORE OAuthGenerateAccessToken.\n// The advanced scope check has run by now. Put the real dynamic scope(s) back so\n// they are written into the access token, next to the placeholder consent:*.\nconsole.error(\"**** SCOPES AFTER: \" + context.get('oauth.settings.allowed_scopes'));\n\n\nvar requested = context.get('consent.requested');\nif (requested) {\n  var parts = String(requested).split(' ');\n  if (parts.indexOf('consent:*') === -1) parts.push('consent:*');\n  context.set('oauth.processing.scope', parts.join(' '));\n}\n"
+                                                }
+                                            },
+                                            {
+                                                "gatewayscript": {
+                                                    "version": "2.0.0",
+                                                    "title": "oauth-auto-generated-advanced-scope-application",
+                                                    "source": "/*\n  Application Scope Check\n    - extension that allows the flexibility to check and override what scope the \n      application is allowed\n*/\nvar urlopen = require ('urlopen');\n\n// Check User Security Context\nlet authscope = context.get('user.au.responseheaders.x-selected-scope');\nif (authscope) \n    context.set('oauth.processing.scope', authscope);\n\n// Client Context\nlet apiObj = context.get('api');\n// Client Context\nlet clientObj = context.get('client');\n// OAuth Context\nlet oauthObj = context.get('oauth');\n// Session Context\nlet sessionObj = context.get('session');\n\nlet grant_type = oauthObj.processing.grant_type;\n\nif(grant_type !== 'authorization_code') {\n\n  //from set-variable action\n  //example: https://9.70.00.00:9443/org/sandbox/loopback/advscope\n  const URL = context.get('oauth.advscope.app.url');\n\n  //from set-variable action\n  const CustomTLSProfile = context.get('oauth.advscope.app.tls-profile');\n\n  //default example: 'tls-client-profile-catalog-default'\n  //full name in log: 'kenorg_sandbox_tlsp-tls-client-profile-catalog-defaultV1.0.0'\n  let DefaultTLSProfile = 'tls-client-profile-catalog-default';\n\n  let headerName = { };\n\n  // Check if query already exists\n  let query = '&';\n  if (URL.indexOf('?') == -1)\n    query = '?';\n\n  query += 'app_name=' + encodeURIComponent(clientObj.app.name) + '&' +\n        'app_id=' + encodeURIComponent(clientObj.app.id) + '&' +\n        'org=' + encodeURIComponent(clientObj.org.name) + '&' +\n        'org_id=' + encodeURIComponent(clientObj.org.id) + '&' +\n        'catalog=' + encodeURIComponent(apiObj.catalog.name) + '&' +\n        'catalog_id=' + encodeURIComponent(apiObj.catalog.id) + '&' +\n        'trans_id=' + encodeURIComponent(sessionObj.transactionID) + '&' +\n        'token_scope=' + encodeURIComponent(oauthObj.processing.scope) + '&' +\n        'api_scope=' + encodeURIComponent(oauthObj.settings.allowed_scopes);\n\n\n  // define urlopen user agent options\n  let ua_options = {\n      'persistentConnection': false,\n      'allowCompression': false,\n      'followRedirect': false,\n      'http10Only': false,\n      'rewriteHost': false\n  };\n  let httpUA = new urlopen.HttpUserAgent(ua_options);\n\n  // define the urlopen options\n  let options = {\n      target: URL + query,\n      sslClientProfile: CustomTLSProfile ? CustomTLSProfile : DefaultTLSProfile,\n      method: 'get',\n      headers: headerName,\n      timeout: 60,\n      agent: httpUA\n  };\n\n  // open connection to advance scope endpoint\n  urlopen.open (options, function (error, response) {\n      if (error) {\n          // Error failed to connect\n          context.set('oauth.custom_error.status.code', 500);\n          context.set('oauth.custom_error.status.reason', 'Internal Server Error');\n          context.set('oauth.custom_error.message', 'server_error');\n          context.set('oauth.custom_error.description', 'Advanced Scope failed to connect');\n      } else {\n          var responseStatusCode = response.statusCode;\n          if (responseStatusCode == 200 ) {\n            // Set selected scope\n              let selectedScope = response.get('x-selected-scope');\n              if (selectedScope)\n                context.set('oauth.processing.scope', selectedScope);\n          } else {\n              // Error non 200 response\n              context.set('oauth.custom_error.message', 'invalid_scope');\n              context.set('oauth.custom_error.description', 'Advanced Scope recieved a non 200 response');\n          }\n      }\n  });\n}"
+                                                }
+                                            },
+                                            {
+                                                "oauth": {
+                                                    "title": "oauth-auto-generated-3",
+                                                    "version": "2.0.0",
+                                                    "description": "This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for token path by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.",
+                                                    "oauth-provider-settings-ref": {
+                                                        "default": "native-consent-oauth"
+                                                    },
+                                                    "supported-oauth-components": [
+                                                        "OAuthGenerateAccessToken",
+                                                        "OAuthVerifyAZCode",
+                                                        "OAuthVerifyRefreshToken",
+                                                        "OAuthCollectMetadata"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "otherwise": [
+                                            {
+                                                "oauth": {
+                                                    "title": "oauth-auto-generated-4",
+                                                    "version": "2.0.0",
+                                                    "description": "This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for all other paths by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.",
+                                                    "oauth-provider-settings-ref": {
+                                                        "default": "native-consent-oauth"
+                                                    },
+                                                    "supported-oauth-components": [
+                                                        "OAuthIntrospectToken",
+                                                        "OAuthRevokeToken"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "type": "oauth",
+                "testable": true,
+                "enforced": true,
+                "phase": "realized",
+                "cors": {
+                    "enabled": true
+                },
+                "properties": {
+                    "ADVScopesApplicationUrl": {
+                        "value": "https://dpgw.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/innovative-org/sandbox/oauth/scope-check",
+                        "description": "oauth-auto-generated-advanced-scope-application-url",
+                        "encoded": false
+                    },
+                    "ADVScopesApplicationTls": {
+                        "value": "tls-client-profile-catalog-default",
+                        "description": "oauth-auto-generated-advanced-scope-application-tls",
+                        "encoded": false
+                    }
+                }
+            },
+            "basePath": "/oauth-native",
+            "swagger": "2.0",
+            "host": "$(catalog.host)",
+            "schemes": [
+                "https"
+            ],
+            "paths": {
+                "/oauth2/authorize": {
+                    "get": {
+                        "produces": [
+                            "text/html"
+                        ],
+                        "summary": "Endpoint for Authorization Code and Implicit grants",
+                        "description": "This endpoint allows an access token (Implicit) or access code (Authorization Code) request with the following parameters:\n              - Implicit (response_type = token, client_id, scope, redirect_uri(*), state(*), response_mode(*))\n              - Authorization Code (response_type = code, client_id, scope, redirect_uri(*), state(*), response_mode(*))",
+                        "parameters": [
+                            {
+                                "name": "response_type",
+                                "in": "query",
+                                "description": "request an authorization code or an access token (implicit)",
+                                "required": true,
+                                "type": "string",
+                                "enum": [
+                                    "code",
+                                    "token"
+                                ]
+                            },
+                            {
+                                "name": "response_mode",
+                                "in": "query",
+                                "description": "If included, must have the value 'form_post'",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "client_id",
+                                "in": "query",
+                                "description": "client_id of the application which product is subscribed to",
+                                "required": true,
+                                "type": "string"
+                            },
+                            {
+                                "name": "scope",
+                                "in": "query",
+                                "description": "Scope being requested",
+                                "type": "string",
+                                "required": false
+                            },
+                            {
+                                "name": "redirect_uri",
+                                "in": "query",
+                                "type": "string",
+                                "description": "URI where user is redirected to after authorization",
+                                "required": false
+                            },
+                            {
+                                "name": "state",
+                                "in": "query",
+                                "type": "string",
+                                "description": "This string will be echoed back to application when user is redirected",
+                                "required": false
+                            }
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "An HTML form for authentication or authorization of this request."
+                            },
+                            "302": {
+                                "description": "Redirect to the clients redirect_uri containing one of the following\n- **authorization code** for Authorization code grant\n- **access token** for Implicit grant\n- **error** in case of errors, such as the user has denied the request\n"
+                            }
+                        }
+                    },
+                    "post": {
+                        "consumes": [
+                            "application/x-www-form-urlencoded"
+                        ],
+                        "produces": [
+                            "text/html"
+                        ],
+                        "summary": "Endpoint for Authorization Code and Implicit grants",
+                        "description": "Submit approval to access token.",
+                        "parameters": [
+                            {
+                                "name": "response_type",
+                                "in": "formData",
+                                "description": "request an authorization code or an access token (implicit)",
+                                "required": false,
+                                "type": "string",
+                                "enum": [
+                                    "code",
+                                    "token"
+                                ]
+                            },
+                            {
+                                "name": "client_id",
+                                "in": "formData",
+                                "description": "application requesting the access code or token",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "scope",
+                                "in": "formData",
+                                "description": "requested scope of this authorization",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "redirect_uri",
+                                "in": "formData",
+                                "description": "URI the application is requesting this code or token to be redirected to",
+                                "required": false,
+                                "type": "string"
+                            }
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "200 OK"
+                            }
+                        }
+                    }
+                },
+                "/oauth2/token": {
+                    "post": {
+                        "consumes": [
+                            "application/x-www-form-urlencoded"
+                        ],
+                        "produces": [
+                            "application/json"
+                        ],
+                        "summary": "Endpoint for obtaining access token using Authorization code, Application and Password grants",
+                        "description": "This endpoint allows requesting an access token following one of the flows below:\n        - Access Code (exchange access code for an access token)\n        - Client Credentials (2-legged, resource owner credentials are not obtained)\n        - Resource Owner Password Credentials (2-legged, client provides resource owner name and password)\n        - Refresh Token (exchange refresh token for a new access token)",
+                        "parameters": [
+                            {
+                                "name": "grant_type",
+                                "in": "formData",
+                                "required": true,
+                                "type": "string",
+                                "enum": [
+                                    "authorization_code",
+                                    "password",
+                                    "client_credentials",
+                                    "refresh_token",
+                                    "urn:ietf:params:oauth:grant-type:jwt-bearer"
+                                ]
+                            },
+                            {
+                                "name": "client_id",
+                                "in": "formData",
+                                "description": "application requesting the token, if there is no Authorization header in the request, this parameter is required",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "client_secret",
+                                "in": "formData",
+                                "description": "application requesting the token, if the provider is confidential, this parameter is required",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "scope",
+                                "in": "formData",
+                                "description": "requested scope of this authorization",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "code",
+                                "in": "formData",
+                                "description": "access code generated from the az get request, required in Access code flow",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "refresh_token",
+                                "in": "formData",
+                                "description": "refresh token generated from the last token request, required in refresh token flow",
+                                "required": false,
+                                "type": "string"
+                            },
+                            {
+                                "name": "assertion",
+                                "in": "formData",
+                                "description": "id_token in the JWT request, required in JWT flow",
+                                "required": false,
+                                "type": "string"
+                            }
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "200 OK"
+                            }
+                        }
+                    }
+                },
+                "/oauth2/introspect": {
+                    "post": {
+                        "consumes": [
+                            "application/x-www-form-urlencoded"
+                        ],
+                        "produces": [
+                            "application/json"
+                        ],
+                        "summary": "Introspect a given access_token or refresh_token supported",
+                        "description": "This endpoint introspects a given access_token or refresh_token\n",
+                        "security": [],
+                        "parameters": [
+                            {
+                                "required": true,
+                                "type": "string",
+                                "description": "The client id for the subscriber",
+                                "in": "formData",
+                                "name": "client_id"
+                            },
+                            {
+                                "required": false,
+                                "type": "string",
+                                "description": "This parameter is required if the API is confidential",
+                                "in": "formData",
+                                "name": "client_secret"
+                            },
+                            {
+                                "name": "token",
+                                "in": "formData",
+                                "description": "String value of the access_token or refresh_token to be introspected",
+                                "required": true,
+                                "type": "string"
+                            },
+                            {
+                                "name": "token_type_hint",
+                                "in": "formData",
+                                "description": "This must contain 'access_token' or 'refresh_token' to indicate the token type",
+                                "required": false,
+                                "type": "string",
+                                "enum": [
+                                    "access_token",
+                                    "refresh_token"
+                                ]
+                            }
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "json document containing access_token or refresh_token information, etc.",
+                                "schema": {
+                                    "$ref": "#/definitions/introspect_response"
+                                }
+                            },
+                            "401": {
+                                "description": "failure"
+                            }
+                        }
+                    }
+                }
+            },
+            "definitions": {
+                "access_token_response": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "access_token"
+                    ],
+                    "properties": {
+                        "access_token": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "introspect_response": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "active",
+                        "client_id",
+                        "client_name",
+                        "username",
+                        "sub",
+                        "exp",
+                        "expstr",
+                        "iat",
+                        "nbf",
+                        "nbfstr",
+                        "scope"
+                    ],
+                    "properties": {
+                        "active": {
+                            "type": "boolean"
+                        },
+                        "client_id": {
+                            "type": "string"
+                        },
+                        "client_name": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        },
+                        "sub": {
+                            "type": "string"
+                        },
+                        "exp": {
+                            "type": "string"
+                        },
+                        "expstr": {
+                            "type": "string"
+                        },
+                        "iat": {
+                            "type": "string"
+                        },
+                        "nbf": {
+                            "type": "string"
+                        },
+                        "nbfstr": {
+                            "type": "string"
+                        },
+                        "scope": {
+                            "type": "string"
+                        },
+                        "miscinfo": {
+                            "type": "string"
+                        },
+                        "consented_on": {
+                            "type": "string"
+                        },
+                        "consented_on_str": {
+                            "type": "string"
+                        },
+                        "grant_type": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "user_registry_urls": [],
+    "jwt_provider_urls": [],
+    "tls_client_profile_urls": [],
+    "created_at": "2026-11-20T16:40:14.000Z",
+    "updated_at": "2026-11-21T10:50:31.000Z",
+    "org_url": "https://api.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/api/orgs/0e7e9c2c-19cb-4be4-9594-6cb795cb8abb",
+    "url": "https://api.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/api/orgs/0e7e9c2c-19cb-4be4-9594-6cb795cb8abb/oauth-providers/1df3ad5f-5eca-4ca1-b912-044aca7eca36"
+}
