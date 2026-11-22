@@ -1,0 +1,111 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: mtls-xslt-demo
+  x-ibm-name: mtls-xslt-demo
+  description: Parses a client certificate with XSLT (dp:get-cert-details) and returns the result, no invoke.
+servers:
+  - url: /mtls-xslt
+x-ibm-configuration:
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - gatewayscript:
+          version: 2.0.0
+          title: normalize-cert
+          source: |-
+            // Step 1 of the XSLT variant: normalise the certificate header.
+            // The XSLT needs pure base64 (no PEM armor, no line breaks) to build a "cert:" URL.
+            var raw = context.get('request.headers.x-client-certificate');
+            
+            var base64only = String(raw || '')
+              .replace('-----BEGIN CERTIFICATE-----', '')
+              .replace('-----END CERTIFICATE-----', '')
+              .replace(/\s+/g, '');
+            
+            // context variable read by the stylesheet with apigw:get-variable('x-client-certificate')
+            context.set('x-client-certificate', base64only);
+      - xslt:
+          version: 2.0.0
+          title: parse-cert
+          input: false
+          source: |-
+            <xsl:stylesheet version="1.0"
+              xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+              xmlns:dp="http://www.datapower.com/extensions"
+              xmlns:apigw="http://www.ibm.com/xmlns/datapower/2017/11/apigateway"
+              extension-element-prefixes="dp apigw"
+              exclude-result-prefixes="dp apigw">
+              <xsl:output method="xml" indent="yes"/>
+              <xsl:template match="/">
+                <!-- pure base64 certificate prepared by normalize-cert.js -->
+                <xsl:variable name="base64cert" select="apigw:get-variable('x-client-certificate')"/>
+            
+                <!-- dp:get-cert-details parses a certificate given as a "cert:<base64>" string -->
+                <xsl:variable name="certDetails" select="dp:get-cert-details(concat('cert:', $base64cert))"/>
+            
+                <xsl:variable name="subject" select="string($certDetails/CertificateDetails/*[local-name()='Subject'])"/>
+                <xsl:variable name="issuer"  select="string($certDetails/CertificateDetails/*[local-name()='Issuer'])"/>
+                <xsl:variable name="serial"  select="string($certDetails/CertificateDetails/*[local-name()='SerialNumber'])"/>
+                <xsl:variable name="notAfter" select="string($certDetails/CertificateDetails/*[local-name()='NotAfter'])"/>
+            
+                <!-- debug: list every node returned by dp:get-cert-details in the gateway log -->
+                <xsl:for-each select="$certDetails/CertificateDetails/*">
+                  <xsl:message dp:priority="debug">
+                    <xsl:value-of select="concat('[CERT] ', local-name(), ' = ', substring(string(.), 1, 80))"/>
+                  </xsl:message>
+                </xsl:for-each>
+            
+                <!-- hand the values back to the assembly as API Connect context variables -->
+                <apigw:set-variable name="'localcertsubject'"  value="$subject"/>
+                <apigw:set-variable name="'localcertissuer'"   value="$issuer"/>
+                <apigw:set-variable name="'localcertserial'"   value="$serial"/>
+                <apigw:set-variable name="'localcertnotafter'" value="$notAfter"/>
+            
+                <xsl:copy-of select="/"/>
+              </xsl:template>
+            </xsl:stylesheet>
+      - gatewayscript:
+          version: 2.0.0
+          title: build-response
+          source: |-
+            // no invoke: the response is built by the gateway
+            context.message.header.set('Content-Type', 'application/json');
+            if (!context.get('localcertsubject')) {
+              // missing or unparsable certificate: dp:get-cert-details returned nothing
+              context.message.statusCode = '400 Bad Request';
+              context.message.body.write(JSON.stringify({ error: 'invalid_certificate' }));
+            } else {
+              context.message.statusCode = '200 OK';
+              context.message.body.write(JSON.stringify({
+                subject: context.get('localcertsubject'),
+                issuer: context.get('localcertissuer'),
+                serial: context.get('localcertserial'),
+                notAfter: context.get('localcertnotafter')
+              }));
+            }
+paths:
+  /cert:
+    get:
+      operationId: getCertDetails
+      summary: Returns the certificate details extracted by the XSLT policy
+      responses:
+        '200':
+          description: Certificate details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subject:
+                    type: string
+                  issuer:
+                    type: string
+                  serial:
+                    type: string
+                  notAfter:
+                    type: string

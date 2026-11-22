@@ -1,0 +1,114 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: mtls-payment-api
+  x-ibm-name: mtls-payment-api
+  description: Protected API. Requires a certificate-bound access token (RFC 8705) and the matching client certificate.
+servers:
+  - url: /mtls-payment
+x-ibm-configuration:
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  cors:
+    enabled: true
+  # The certificate presented by the caller must be the one registered on the application
+  # identified by the access token (client_id).
+  application-authentication:
+    certificate: true
+  application-authentication-source:
+    - header
+  assembly:
+    execute:
+      - gatewayscript:
+          version: 2.0.0
+          title: verify-certificate-binding
+          source: |-
+            // APIC has already parsed the client certificate (application.certificate.*)
+            // and the access token (oauth.verified_access_token.*): no crypto needed here.
+            var fp = context.get('application.certificate.fingerprint');
+            var bound = String(context.get('oauth.verified_access_token.misc_info') || '');
+
+            // binding stored in the token by the provider: x5t#S256=<hash>;fp=<fingerprint>
+            var m = /x5t#S256=([^;]+);fp=(.+)$/.exec(bound);
+
+            if (!fp || !m || m[2] !== fp) {
+              // RFC 8705 section 3: the token is not usable with another certificate
+              context.message.statusCode = '401 Unauthorized';
+              context.message.header.set('Content-Type', 'application/json');
+              context.message.header.set('WWW-Authenticate', 'Bearer error="invalid_token", error_description="certificate does not match the token binding"');
+              context.message.body.write(JSON.stringify({
+                error: 'invalid_token',
+                error_description: 'The client certificate does not match the certificate the token is bound to'
+              }));
+            } else {
+              context.set('mtls.x5t', m[1]);
+            }
+      - gatewayscript:
+          version: 2.0.0
+          title: build-response
+          source: |-
+            // no invoke: the response is built by the gateway
+            if (context.get('mtls.x5t')) {
+              context.message.statusCode = '200 OK';
+              context.message.header.set('Content-Type', 'application/json');
+              context.message.body.write(JSON.stringify({
+                status: 'ok',
+                message: 'Certificate-bound token accepted',
+                client_id: context.get('oauth.verified_access_token.client_id'),
+                scope: context.get('oauth.verified_access_token.scope'),
+                certificate_subject: context.get('application.certificate.Subject'),
+                certificate_issuer: context.get('application.certificate.Issuer'),
+                certificate_fingerprint: context.get('application.certificate.fingerprint'),
+                'cnf': { 'x5t#S256': context.get('mtls.x5t') }
+              }));
+            }
+paths:
+  /payment:
+    get:
+      operationId: getPayment
+      summary: Returns the certificate binding seen by the gateway
+      responses:
+        '200':
+          description: Token and certificate match
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  client_id:
+                    type: string
+                  scope:
+                    type: string
+                  certificate_subject:
+                    type: string
+                  certificate_issuer:
+                    type: string
+                  certificate_fingerprint:
+                    type: string
+                  cnf:
+                    type: object
+                    properties:
+                      x5t#S256:
+                        type: string
+        '401':
+          description: Missing/invalid token, unknown certificate, or certificate not bound to the token
+components:
+  securitySchemes:
+    mtls-oauth:
+      type: oauth2
+      x-ibm-oauth-provider: mtls-oauth
+      flows:
+        clientCredentials:
+          tokenUrl: https://$(catalog.url)/mtls-oauth/oauth2/token
+          scopes:
+            payment: payment scope
+security:
+  - mtls-oauth:
+      - payment

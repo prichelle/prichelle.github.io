@@ -1,0 +1,21 @@
+product: 1.0.0
+info:
+  name: mtls-xslt-product
+  title: mTLS XSLT Demo Product
+  version: 1.0.0
+apis:
+  mtls-xslt-demo:
+    $ref: mtls-xslt-api.yaml
+gateways:
+  - datapower-api-gateway
+visibility:
+  view:
+    enabled: true
+    type: public
+  subscribe:
+    enabled: true
+    type: authenticated
+plans:
+  default:
+    title: Default Plan
+    approval: false

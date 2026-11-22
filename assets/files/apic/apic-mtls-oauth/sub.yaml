@@ -1,0 +1,5 @@
+title: mtls-sub
+name: mtls-sub
+# url returned by: apiccli products:get mtls-payment-product:1.0.0 -s <mgmt> -o <org> -c sandbox --scope catalog
+product_url: <product url>
+plan: default

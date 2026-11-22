@@ -1,0 +1,6 @@
+title: mtls-app
+name: mtls-app
+summary: Application authenticated with a client certificate (RFC 8705)
+# Full PEM of certs/client-a.crt, with \n for line breaks. Generate it with:
+#   ./prepare-app.sh   (writes app.generated.yaml, which is not committed)
+application_public_certificate_entry: "<contents of certs/client-a.crt, newlines replaced by \\n>"

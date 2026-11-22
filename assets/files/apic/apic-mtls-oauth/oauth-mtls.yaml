@@ -1,0 +1,324 @@
+type: 'oauth_provider'
+api_version: '2.0.0'
+id: '584ff8a7-568d-4740-b79a-0cfb00e38120'
+name: 'oauth-mtls'
+title: 'oauth-mtls'
+debug: false
+owned: true
+provider_type: 'native'
+scopes:
+  payment: 'payment scope'
+grants:
+  - 'access_code'
+gateway_version: '6000'
+native_provider:
+  clients:
+    - 'confidential'
+  authorize_path: '/oauth2/authorize'
+  token_path: '/oauth2/token'
+  pkce:
+    enabled: true
+    required: false
+    allow_plain: false
+  native_provider_5000:
+    identity_extraction:
+      type: 'default_form'
+    authorization:
+      type: 'authenticated'
+    authentication: {}
+    scope_validators: {}
+  advanced_scope_security:
+    enabled: false
+    mode:
+      - 'basic-auth'
+    basic_auth:
+      request_headername: 'x-advanced-scope-basic-authorization-header'
+  access_code_ttl: 300
+  access_token_ttl: 3600
+  access_token_one_time_use: false
+  maximum_consent_ttl: 0
+  refresh_token:
+    enabled: false
+    count: 2048
+    ttl: 2682000
+    one_time_use: true
+  revocation:
+    enabled: false
+    type: 'native'
+    resource_owner_revocation_path: '/oauth2/issued'
+    client_revocation_path: '/oauth2/revoke'
+    application_revocation:
+      enabled: false
+    owner_revocation:
+      enabled: false
+    third_party_fail_on_error: true
+  token_introspection:
+    enabled: false
+    introspection_path: '/oauth2/introspect'
+  token_metadata:
+    enabled: true
+    source:
+      - 'authentication_url'
+    header_name_payload: 'X-API-OAUTH-METADATA-FOR-PAYLOAD'
+    header_name_token: 'X-API-OAUTH-METADATA-FOR-ACCESSTOKEN'
+  openid_connect:
+    enabled: false
+  api:
+    info:
+      description: ''
+      x-ibm-name: 'oauth-mtls584ff8a7-568d-4740-b79a-0cfb00e38120'
+      version: '1.0.0'
+      title: 'oauth-mtls'
+    x-ibm-configuration:
+      gateway: 'datapower-api-gateway'
+      assembly:
+        execute:
+          - oauth:
+              title: 'oauth-auto-generated-1'
+              version: '2.0.0'
+              description: 'This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for OAuth Validation by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.'
+              oauth-provider-settings-ref:
+                default: 'oauth-mtls'
+              supported-oauth-components:
+                - 'OAuthValidateRequest'
+          - switch:
+              version: '2.0.0'
+              title: 'oauth-auto-generated-switch'
+              case:
+                - condition: '($operationPath() = ''/oauth2/token'')'
+                  execute:
+                    - oauth:
+                        title: 'oauth-auto-generated-3'
+                        version: '2.0.0'
+                        description: 'This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for token path by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.'
+                        oauth-provider-settings-ref:
+                          default: 'oauth-mtls'
+                        supported-oauth-components:
+                          - 'OAuthGenerateAccessToken'
+                          - 'OAuthVerifyAZCode'
+                          - 'OAuthVerifyRefreshToken'
+                          - 'OAuthCollectMetadata'
+                    - gatewayscript:
+                        version: '2.0.0'
+                        title: 'gatewayscript'
+                        source: "// Read the raw cert header using API Connect context\nvar raw = context.get('request.headers.x-client-certificate');\n\n// Strip PEM armor and ALL whitespace, leaving only raw base64\nvar base64only = raw\n  .replace('-----BEGIN CERTIFICATE-----', '')\n  .replace('-----END CERTIFICATE-----', '')\n  .replace(/\\s+/g, '');\n\nconsole.error('[CERT-NORMALIZE] base64 length: ' + base64only.length);\n\n// Overwrite the header with pure base64 for the XSLT to consume\ncontext.set('x-client-certificate', base64only);"
+                    - xslt:
+                        version: '2.1.0'
+                        title: 'xslt'
+                        input: false
+                        serialize-output: false
+                        source: "<xsl:stylesheet version=\"1.0\"\n  xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\n  xmlns:dp=\"http://www.datapower.com/extensions\"\n  xmlns:apigw=\"http://www.ibm.com/xmlns/datapower/2017/11/apigateway\"\n  extension-element-prefixes=\"dp apigw\"\n  exclude-result-prefixes=\"dp apigw\">\n  <xsl:output method=\"xml\" indent=\"yes\"/>\n  <xsl:template match=\"/\">\n    <!-- Read raw base64 cert from header -->\n    <xsl:variable name=\"base64cert\"\n      select=\"apigw:get-variable('x-client-certificate')\"/>\n    <!-- Parse using cert: prefix (pure base64, no headers) -->\n    <xsl:variable name=\"certDetails\"\n      select=\"dp:get-cert-details(concat('cert:', $base64cert))\"/>\n      \n<xsl:for-each select=\"$certDetails/*\">\n  <xsl:message dp:priority=\"error\">\n    <xsl:value-of select=\"concat('NODE: [', local-name(), '] = ', .)\"/>\n  </xsl:message>\n</xsl:for-each>      \n      \n      \n<xsl:variable name=\"subject\"\n  select=\"string($certDetails/CertificateDetails/*[local-name()='Subject'])\"/>\n<xsl:variable name=\"issuer\"\n  select=\"string($certDetails/CertificateDetails/*[local-name()='Issuer'])\"/>\n<xsl:variable name=\"serial\"\n  select=\"string($certDetails/CertificateDetails/*[local-name()='Serial Number'])\"/>\n\n    <!-- Log at error level -->\n<xsl:message dp:priority=\"error\">\n  <xsl:value-of select=\"$certDetails\"/>\n</xsl:message>\n<xsl:message dp:priority=\"error\">\n  <xsl:value-of select=\"concat('[CERT] Subject:    ', $subject)\"/>\n</xsl:message>\n<xsl:message dp:priority=\"error\">\n  <xsl:value-of select=\"concat('[CERT] Issuer:     ', $issuer)\"/>\n</xsl:message>\n<xsl:message dp:priority=\"error\">\n  <xsl:value-of select=\"concat('[CERT] Serial:     ', $serial)\"/>\n</xsl:message>\n    <!-- Write to API Connect context variables -->\n<apigw:set-variable name=\"'localcertsubject'\"   value=\"$subject\"/>\n<apigw:set-variable name=\"'localcertissuer'\"    value=\"$issuer\"/>\n<apigw:set-variable name=\"'localcertserial'\"    value=\"$serial\"/>\n\n    <xsl:copy-of select=\"/\"/>\n\n  </xsl:template>\n\n</xsl:stylesheet>\n"
+                        compile-settings: {}
+                    - gatewayscript:
+                        version: '2.0.0'
+                        title: 'gatewayscript'
+                        source: "var oauth = context.get('oauth');\n//var test = \"test\";\nconsole.error('*****')\nconsole.error(oauth)\nconsole.error('*****<<<')\n\nconst consentid = context.get(\"oauth.processing.metadata.access_token\").substring(2)\n//context.set(\"oauth.processing.scope\",(oauth.processing.verified_code.scope +\" \"+ consentid))\n//context.set(\"oauth.processing.verified_code.scope\",(oauth.processing.verified_code.scope +\" \"+ consentid))\n\nconst localcertsubject = context.get('localcertsubject');\n\n//context.set(\"oauth.processing.metadata.access_token\",mtls)\ncontext.set(\"oauth.processing.metadata.payload\",\"a:\"+localcertsubject)\ncontext.set(\"oauth.processing.metadata.access_token\",\"a:\"+localcertsubject)\n//context.set(\"oauth.processing.verified_code.misc_info\",\"!ma=a:\"+localcertsubject +\"!mp=a:\" +localcertsubject)\n\noauth = context.get('oauth');\n//var test = \"test\";\nconsole.error('*****')\nconsole.error(oauth)\nconsole.error('*****<<<')"
+                    - oauth:
+                        title: 'oauth-auto-generated-3'
+                        version: '2.0.0'
+                        description: 'This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for token path by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.'
+                        oauth-provider-settings-ref:
+                          default: 'oauth-mtls'
+                        supported-oauth-components:
+                          - 'OAuthGenerateAccessToken'
+                - condition: '($operationPath() = ''/oauth2/authorize'')'
+                  execute:
+                    - user-security:
+                        title: 'user-security-auto-generated'
+                        version: '2.1.0'
+                        description: 'This user security policy performs EI(basic) and AU(auth url) check for oauth assembly. Change the security check method as required.'
+                        factor-id: 'default'
+                        extract-identity-method: 'redirect'
+                        ei-stop-on-error: true
+                        user-auth-method: 'user-registry'
+                        au-stop-on-error: true
+                        user-az-method: 'authenticated'
+                        az-stop-on-error: true
+                        auth-response-headers-pattern: '(?i)x-api*'
+                        auth-response-header-credential: 'X-API-Authenticated-Credential'
+                        redirect-url: 'http://psd2consent-app-apic10.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/login'
+                        redirect-time-limit: 300
+                        query-parameters: 'app-name=$(client.app.name)'
+                        user-registry: 'consent-auth'
+                    - oauth:
+                        title: 'oauth-auto-generated-2'
+                        version: '2.0.0'
+                        description: 'This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for az code path by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.'
+                        oauth-provider-settings-ref:
+                          default: 'oauth-mtls'
+                        supported-oauth-components:
+                          - 'OAuthGenerateAZCode'
+                          - 'OAuthGenerateAccessToken'
+                          - 'OAuthVerifyAZCode'
+                          - 'OAuthCollectMetadata'
+                - otherwise:
+                    - oauth:
+                        title: 'oauth-auto-generated-4'
+                        version: '2.0.0'
+                        description: 'This oauth policy performs all OAuth/OpenID Connect protocol steps that are needed for all other paths by default. The inputs and outputs of each of the steps are driven by documented context variables. Add or remove the Supported OAuth Components as required.'
+                        oauth-provider-settings-ref:
+                          default: 'oauth-mtls'
+                        supported-oauth-components:
+                          - 'OAuthIntrospectToken'
+                          - 'OAuthRevokeToken'
+      type: 'oauth'
+      testable: true
+      enforced: true
+      phase: 'realized'
+      cors:
+        enabled: true
+      properties: {}
+    basePath: '/oauth-mtls'
+    swagger: '2.0'
+    host: '$(catalog.host)'
+    schemes:
+      - 'https'
+    paths:
+      /oauth2/authorize:
+        get:
+          produces:
+            - 'text/html'
+          summary: 'Endpoint for Authorization Code and Implicit grants'
+          description: "This endpoint allows an access token (Implicit) or access code (Authorization Code) request with the following parameters:\n              - Implicit (response_type = token, client_id, scope, redirect_uri(*), state(*), response_mode(*))\n              - Authorization Code (response_type = code, client_id, scope, redirect_uri(*), state(*), response_mode(*))"
+          parameters:
+            - name: 'response_type'
+              in: 'query'
+              description: 'request an authorization code or an access token (implicit)'
+              required: true
+              type: 'string'
+              enum:
+                - 'code'
+                - 'token'
+            - name: 'response_mode'
+              in: 'query'
+              description: 'If included, must have the value ''form_post'''
+              required: false
+              type: 'string'
+            - name: 'client_id'
+              in: 'query'
+              description: 'client_id of the application which product is subscribed to'
+              required: true
+              type: 'string'
+            - name: 'scope'
+              in: 'query'
+              description: 'Scope being requested'
+              type: 'string'
+              required: false
+            - name: 'redirect_uri'
+              in: 'query'
+              type: 'string'
+              description: 'URI where user is redirected to after authorization'
+              required: false
+            - name: 'state'
+              in: 'query'
+              type: 'string'
+              description: 'This string will be echoed back to application when user is redirected'
+              required: false
+          responses:
+            '200':
+              description: 'An HTML form for authentication or authorization of this request.'
+            '302':
+              description: "Redirect to the clients redirect_uri containing one of the following\n- **authorization code** for Authorization code grant\n- **access token** for Implicit grant\n- **error** in case of errors, such as the user has denied the request\n"
+        post:
+          consumes:
+            - 'application/x-www-form-urlencoded'
+          produces:
+            - 'text/html'
+          summary: 'Endpoint for Authorization Code and Implicit grants'
+          description: 'Submit approval to access token.'
+          parameters:
+            - name: 'response_type'
+              in: 'formData'
+              description: 'request an authorization code or an access token (implicit)'
+              required: false
+              type: 'string'
+              enum:
+                - 'code'
+                - 'token'
+            - name: 'client_id'
+              in: 'formData'
+              description: 'application requesting the access code or token'
+              required: false
+              type: 'string'
+            - name: 'scope'
+              in: 'formData'
+              description: 'requested scope of this authorization'
+              required: false
+              type: 'string'
+            - name: 'redirect_uri'
+              in: 'formData'
+              description: 'URI the application is requesting this code or token to be redirected to'
+              required: false
+              type: 'string'
+          responses:
+            '200':
+              description: '200 OK'
+      /oauth2/token:
+        post:
+          consumes:
+            - 'application/x-www-form-urlencoded'
+          produces:
+            - 'application/json'
+          summary: 'Endpoint for obtaining access token using Authorization code, Application and Password grants'
+          description: "This endpoint allows requesting an access token following one of the flows below:\n        - Access Code (exchange access code for an access token)\n        - Client Credentials (2-legged, resource owner credentials are not obtained)\n        - Resource Owner Password Credentials (2-legged, client provides resource owner name and password)\n        - Refresh Token (exchange refresh token for a new access token)"
+          parameters:
+            - name: 'grant_type'
+              in: 'formData'
+              required: true
+              type: 'string'
+              enum:
+                - 'authorization_code'
+                - 'password'
+                - 'client_credentials'
+                - 'refresh_token'
+                - 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+            - name: 'client_id'
+              in: 'formData'
+              description: 'application requesting the token, if there is no Authorization header in the request, this parameter is required'
+              required: false
+              type: 'string'
+            - name: 'client_secret'
+              in: 'formData'
+              description: 'application requesting the token, if the provider is confidential, this parameter is required'
+              required: false
+              type: 'string'
+            - name: 'scope'
+              in: 'formData'
+              description: 'requested scope of this authorization'
+              required: false
+              type: 'string'
+            - name: 'code'
+              in: 'formData'
+              description: 'access code generated from the az get request, required in Access code flow'
+              required: false
+              type: 'string'
+            - name: 'refresh_token'
+              in: 'formData'
+              description: 'refresh token generated from the last token request, required in refresh token flow'
+              required: false
+              type: 'string'
+            - name: 'assertion'
+              in: 'formData'
+              description: 'id_token in the JWT request, required in JWT flow'
+              required: false
+              type: 'string'
+          responses:
+            '200':
+              description: '200 OK'
+    definitions:
+      access_token_response:
+        type: 'object'
+        additionalProperties: false
+        required:
+          - 'access_token'
+        properties:
+          access_token:
+            type: 'string'
+user_registry_urls:
+  - 'https://api.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/api/user-registries/0e7e9c2c-19cb-4be4-9594-6cb795cb8abb/f06873c4-43f7-4ee4-8dbc-2fa7a9cb9a87'
+jwt_provider_urls: []
+tls_client_profile_urls: []
+created_at: '2026-06-09T12:38:45.000Z'
+updated_at: '2026-06-11T11:33:49.000Z'
+org_url: 'https://api.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/api/orgs/0e7e9c2c-19cb-4be4-9594-6cb795cb8abb'
+url: 'https://api.apps.ocp-int-5b7e0d81360e5972646d63308bd04bf7-0000.eu-de.containers.appdomain.cloud/api/orgs/0e7e9c2c-19cb-4be4-9594-6cb795cb8abb/oauth-providers/584ff8a7-568d-4740-b79a-0cfb00e38120'

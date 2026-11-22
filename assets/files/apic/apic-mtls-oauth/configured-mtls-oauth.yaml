@@ -1,0 +1,7 @@
+type: configured_oauth_provider
+api_version: 2.0.0
+name: mtls-oauth
+title: mTLS OAuth Provider (RFC 8705)
+# <mgmt> = management endpoint host, <org-id> = id of the provider organization,
+# <provider-id> = id returned when the provider is created (apiccli oauth-providers:get mtls-oauth)
+oauth_provider_url: https://<mgmt>/api/orgs/<org-id>/oauth-providers/<provider-id>

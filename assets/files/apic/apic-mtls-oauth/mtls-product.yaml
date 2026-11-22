@@ -1,0 +1,24 @@
+product: 1.0.0
+info:
+  name: mtls-payment-product
+  title: mTLS Payment Product
+  version: 1.0.0
+apis:
+  mtls-payment-api:
+    $ref: mtls-api.yaml
+gateways:
+  - datapower-api-gateway
+visibility:
+  view:
+    enabled: true
+    type: public
+  subscribe:
+    enabled: true
+    type: authenticated
+plans:
+  default:
+    title: Default Plan
+    rate-limits:
+      default:
+        value: 100/1minute
+    approval: false
